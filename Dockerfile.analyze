@@ -1,0 +1,5 @@
+FROM ghcr.io/vita2hos/devcontainer/vita2hos:latest
+COPY source/lib/libFast5.so /lib/libFast5.so
+COPY source/lib/libStormGLOFT.so /lib/libStormGLOFT.so
+RUN objdump -T /lib/libFast5.so | grep Java || true
+RUN objdump -T /lib/libStormGLOFT.so | grep Java || true

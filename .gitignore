@@ -1,0 +1,8 @@
+build/
+build.log
+runtime/
+game/
+portlibs32/
+source/lib/
+*.nsp
+*.elf
