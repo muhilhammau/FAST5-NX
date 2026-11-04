@@ -11,8 +11,7 @@ build_log.txt
 *.nro
 *.nacp
 
-# Runtime & libraries (submodules or external)
-runtime/
+# Libraries (external)
 portlibs32/
 source/lib/
 
@@ -37,4 +36,13 @@ launcher/*.nacp
 # OS
 .DS_Store
 Thumbs.db
+
+# Analysis/temp files
+_work/
+_removed/
+cek3.txt
+dex_*.txt
+dumpdex*.txt
+launcher_log.txt
+launcher_out.txt
 '@
