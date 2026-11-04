@@ -11,7 +11,9 @@
 #include "rt_window.h"
 #include "so_util.h"
 #include "util.h"
+#include "watchdog.h"
 #include <EGL/egl.h>
+#include <GLES2/gl2.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +21,9 @@
 #include <switch.h>
 
 #define GR "com/gameloft/android/GAND/GloftF5HP/ML/GameRenderer"
+/* the game's own screen: the Switch scales this window to the display */
+#define F5_W 1024
+#define F5_H 600
 
 static so_module game;
 static EGLDisplay display;
@@ -28,6 +33,9 @@ static EGLContext context;
 static unsigned boot_frames;
 int fast5_prepare_so(char *out, size_t cap);
 int fast5_fix_swp(so_module *m);
+void f5_input_init(void *env, void *cls, void *kd, void *ku, void *tp, void *tm, void *tr, void *ac);
+void f5_input_poll(void);
+void f5_audio_pause(int on);
 
 EGLDisplay b_eglGetDisplay(void *);
 EGLBoolean b_eglInitialize(EGLDisplay, EGLint *, EGLint *);
@@ -38,7 +46,7 @@ EGLBoolean b_eglMakeCurrent(EGLDisplay, EGLSurface, EGLSurface, EGLContext);
 EGLBoolean b_eglSwapBuffers(EGLDisplay, EGLSurface);
 EGLBoolean b_eglSwapInterval(EGLDisplay, EGLint);
 
-unsigned dcr_boot_frames(void) { return boot_frames; }
+uint64_t dcr_boot_frames(void) { return boot_frames; }
 
 static void *need(const char *name) {
   void *p = (void *)so_try_find_addr_rx(&game, name);
@@ -48,7 +56,7 @@ static void *need(const char *name) {
 }
 
 int port_load(const char *apk) {
-  (void)apk;
+  dcr_setup_from_apk(apk);
   log_console_progress("Loading game engine...", 0);
   char path[768];
   if (fast5_prepare_so(path, sizeof path) != 0)
@@ -70,7 +78,7 @@ int port_load(const char *apk) {
 }
 
 static void egl_start(void) {
-  dcr_window_set_size(1280, 720);
+  dcr_window_set_size(F5_W, F5_H);
   display = b_eglGetDisplay(NULL);
   EGLint maj, min;
   if (!b_eglInitialize(display, &maj, &min))
@@ -94,8 +102,8 @@ static void egl_start(void) {
   debugPrintf("[egl] GLES2 1280x720 ready\n");
 }
 
-void port_focus_lost(void) { dcr_boost_idle(); }
-void port_focus_gained(void) {}
+void port_focus_lost(void) { dcr_boost_idle(); f5_audio_pause(1); }
+void port_focus_gained(void) { f5_audio_pause(0); }
 
 void port_run(void) {
   so_execute_init_array(&game);
@@ -109,10 +117,29 @@ void port_run(void) {
   if (v < 0)
     fatal_error("JNI_OnLoad failed (%d).", v);
 
-  /* BELUM DIAKTIFKAN: signature nativeInit/nativeResize/nativeRender belum
-   * dibaca dari classes.dex. Tambahkan di sini setelah diketahui. */
-  debugPrintf("[boot] milestone 1: JNI_OnLoad ok, game loop not started\n");
-
+  void (*render_fn)(void *, void *) = NULL;
+  {
+    typedef void (*fn_v)(void *, void *);
+    typedef void (*fn_ii)(void *, void *, int, int);
+    typedef void (*fn_iii)(void *, void *, int, int, int);
+#define PKG "Java_com_gameloft_android_GAND_GloftF5HP_ML_"
+#define PK "com/gameloft/android/GAND/GloftF5HP/ML/"
+    /* GLGame.nativeInit is static (dex: invoke-static GLGame;->nativeInit()V): the receiver is the class */
+    ((fn_v)need(PKG "GLUtils_Device_nativeInit"))(g_jni_env, jni_class(PK "GLUtils/Device")->obj);
+    ((fn_v)need(PKG "GLResLoader_nativeInit"))(g_jni_env, jni_class(PK "GLResLoader")->obj);
+    ((fn_v)need(PKG "GLGame_nativeInit"))(g_jni_env, jni_class(PK "GLGame")->obj);
+    ((fn_iii)need(PKG "GameRenderer_nativeInit"))(g_jni_env, jni_class(GR)->obj, F5_W, F5_H, 0);
+    ((fn_ii)need(PKG "GameRenderer_nativeResize"))(g_jni_env, jni_class(GR)->obj, F5_W, F5_H);
+    render_fn = (fn_v)need(PKG "GameRenderer_nativeRender");
+  }
+  debugPrintf("[boot] milestone 2: native init done\n");
+  f5_input_init(g_jni_env, jni_class(PK "GLGame")->obj, need(PKG "GLGame_nativeSetOnKeyDown"),
+                need(PKG "GLGame_nativeSetOnKeyUp"), need(PKG "GLGame_nativeTouchPressed"),
+                need(PKG "GLGame_nativeTouchMoved"), need(PKG "GLGame_nativeTouchReleased"),
+                need(PKG "GLGame_nativeAccelerometer"));
+  dcr_watchdog_start();
+  debugPrintf("[log] RAM ring mode on: lines reach the SD every 5 s\n");
+  log_set_quiet(1);
   int first = 1;
   while (!rt_exit_requested() && appletMainLoop()) {
     rt_applet_poll();
@@ -121,10 +148,26 @@ void port_run(void) {
       svcSleepThread(50000000);
       continue;
     }
+    f5_input_poll();
     dcr_boost_frame_begin();
+    glEnable(0x8037); /* GL_POLYGON_OFFSET_FILL */
+    glPolygonOffset(0.0f, 1.0f);
+    uint64_t t0 = armTicksToNs(armGetSystemTick());
+    render_fn(g_jni_env, jni_class(GR)->obj);
+    uint64_t t1 = armTicksToNs(armGetSystemTick());
+    if ((boot_frames % 120) == 0) {
+      unsigned char px[4] = {0};
+      glReadPixels(640, 360, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, px);
+      debugPrintf("[diag] frame %u center px = %u %u %u %u\n", boot_frames, px[0], px[1], px[2], px[3]);
+    }
+    glDisable(0x8037);
     boot_frames++;
     dcr_boost_frame_end((uint64_t)boot_frames);
-    if (!b_eglSwapBuffers(display, surface))
+    uint64_t t2 = armTicksToNs(armGetSystemTick());
+    int swapped = b_eglSwapBuffers(display, surface);
+    uint64_t t3 = armTicksToNs(armGetSystemTick());
+    if ((boot_frames % 30) == 0) debugPrintf("[perf] frame %u render %llu ms swap %llu ms\n", boot_frames, (unsigned long long)((t1 - t0) / 1000000), (unsigned long long)((t3 - t2) / 1000000));
+    if (!swapped)
       fatal_error("EGL presentation failed; see debug.log.");
     if (first) {
       first = 0;
