@@ -1,130 +1,167 @@
 @'
-# Fast Five HD - Nintendo Switch Port (32-bit/armeabi-v7a)
+<div align="center">
 
-This is a port of **Fast Five HD** (Gameloft) for Nintendo Switch using the [android32](https://github.com/aks796/android32) runtime. The game uses a custom **StormGLOFT** engine.
+<img src="launcher/icon.jpg" alt="Fast Five HD" width="180">
 
-## Game Info
-- **Package**: com.gameloft.android.GAND.GloftF5HP.ML
-- **Architecture**: 32-bit only (armeabi-v7a)
-- **Main libraries**: libFast5.so (8.3 MB), libStormGLOFT.so (900 KB)
-- **Main Activity**: com.gameloft.android.GAND.GloftF5HP.ML.GLGame
-- **Engine**: Custom StormGLOFT (Gameloft)
+# fast5_nx
 
-## Requirements
-- Nintendo Switch with Atmosphère CFW
-- [sphaira](https://github.com/official-ah/sphaira) for forwarder installation
-- Original APK (player must provide their own copy)
-- Docker with the ita2hos toolchain image
+**Fast Five HD on Nintendo Switch**
+
+An unofficial Nintendo Switch wrapper/port of Gameloft's Android game.
+
+[![Switch](https://img.shields.io/badge/Nintendo_Switch-Homebrew-E60012?style=for-the-badge&logo=nintendoswitch&logoColor=white)](#installation)
+[![Version](https://img.shields.io/badge/version-v1.0.7-4C8BF5?style=for-the-badge)](#)
+[![Android](https://img.shields.io/badge/Android-1.0.7-3DDC84?style=for-the-badge&logo=android&logoColor=white)](#about)
+[![AArch32](https://img.shields.io/badge/AArch32-32--bit-0091BD?style=for-the-badge&logo=arm&logoColor=white)](#building)
+
+</div>
+
+---
+
+## About
+
+ast5_nx runs the original 32-bit Android version of **Fast Five HD** on Nintendo Switch, using the open-source [android32](https://github.com/aks796/android32) runtime.
+
+The supported game build is:
+
+`	ext
+Package:      com.gameloft.android.GAND.GloftF5HP.ML
+Version:      1.0.7
+Version code: 107
+ABI:          armeabi-v7a / AArch32
+Engine:       StormGLOFT (custom Gameloft engine)
+`
+
+The original ARM game library runs directly inside a 32-bit Horizon OS process. Players must provide their own APK and game data files (gameloft/games/GloftF5HP/); these are not included in the repository or release download.
+
+**No game files are included.** You need your own copy of the game's APK. This project is not affiliated with or endorsed by Gameloft, Universal Pictures, or Nintendo.
+
+> Work in progress.
+
+## Status
+
+| Feature | State |
+| --- | --- |
+| Boot, loading, 3D gameplay | working ✓ |
+| Touchscreen | working ✓ |
+| Audio (OpenSL ES / AudioTrack on audout) | working ✓ |
+| Gamepad: cursor (right stick / D-pad), A, + | working ✓ |
+| Gamepad: left stick to the on-screen joystick | working ✓ |
+| Intro and cutscene videos | skipped (the game is told they finished) |
+| Online features | not implemented |
+
+## Features
+
+- Original Android **1.0.7** game running natively in AArch32 on Switch.
+- **1280 × 720** widescreen presentation with touchscreen and gamepad integration.
+- Dynamic cursor navigation for touch-oriented menus (Right Stick / D-Pad + A button).
+- Direct game SD data mounting (gameloft/games/GloftF5HP/).
+- Native checkpoint saves and settings persistence.
+- Audio playback via android32 AudioTrack / OpenSL ES driver.
+- 64-bit NRO launcher carrying the 32-bit payload with sphaira HOME-menu forwarder support.
+
+## Installation
+
+### Requirements
+
+- A Nintendo Switch running Atmosphère custom firmware.
+- [sphaira](https://github.com/ITotalJustice/sphaira) for installing the HOME-menu forwarder.
+- Your own supported **1.0.7 ARMv7 APK** (com.gameloft.android.GAND.GloftF5HP.ML).
+- Extracted Gameloft SD data folder (GloftF5HP).
+
+Copy the switch/ folder to the root of your SD card. Ensure the game files are placed according to the layout below:
+
+`	ext
+sd:/switch/fast5_nx/
+├── fast5_nx.nro
+├── Fast-Five-HD.apk
+└── gameloft/
+    └── games/
+        └── GloftF5HP/
+            ├── anims/
+            ├── collisions/
+            ├── datalibs/
+            ├── levels/
+            ├── models/
+            ├── music/
+            ├── shaders/
+            ├── text/
+            ├── textures/
+            ├── videos/
+            ├── oconf.bar
+            ├── sound.pack
+            └── states
+`
+
+### First launch
+
+1. Open **sphaira** and locate **Fast Five HD** in Homebrew.
+2. Select **Install Forwarder**.
+3. Launch the game icon from the Switch **HOME menu**.
+4. On initial launch, the runtime extracts necessary native libraries from the APK and initializes local configurations.
+
+## Controls
+
+### Gameplay
+
+| Nintendo Switch | Input |
+| --- | --- |
+| **Left Stick** | Vehicle steering / On-screen joystick |
+| **Right Stick / D-Pad** | Move virtual cursor |
+| **A** | Tap cursor position / Primary action (Accelerate) |
+| **B** | Brake / Reverse |
+| **X / Y** | Context action buttons (Nitro, Handbrake) |
+| **L / R** | Camera / Look behind |
+| **+** | Pause / Game menu |
+| **Touchscreen** | Native touch controls |
+
+### Cursor / Navigation
+
+- Move the **Right Stick** or **D-Pad** to reveal the yellow selection cursor.
+- Press **A** to execute a touch tap at the cursor's location.
+- Button positions can be modified by creating uttons.txt inside /switch/fast5_nx/ (refer to uttons.example.txt).
+
+## File Structure & Saves
+
+The application directory is located under sd:/switch/fast5_nx/:
+
+`	ext
+data/              Android internal storage and native saves
+gameloft/          Gameloft shared data (gameloft/games/GloftF5HP/)
+sdcard/            Android external storage root
+buttons.txt        Custom button mapping overrides
+debug.log          Current execution log
+crash.log          Crash diagnostics output
+`
 
 ## Building
 
-### Prerequisites
-1. **Docker** installed and running
-2. **libnx32** built from source:
-   `ash
-   git clone https://github.com/aks796/libnx32 ../libnx32
-   cd ../libnx32 && ./build.sh
-   `
-3. **mesa32** (OpenGL ES/EGL) - download release and extract to portlibs32/
-4. **android32 runtime** - cloned as untime/ submodule:
-   `ash
-   git submodule add https://github.com/aks796/android32 runtime
-   `
+### Requirements
 
-### Build Steps
-`ash
-# Pull the toolchain image
-docker pull ghcr.io/vita2hos/devcontainer/vita2hos:latest
+- Docker with Linux container support.
+- [android32](https://github.com/aks796/android32) in untime/ (Git submodule).
+- [libnx32](https://github.com/aks796/libnx32) prefix (version 4.12.0 or newer).
+- [mesa32](https://github.com/aks796/mesa32) or mesa-switch32 in portlibs32/.
+- devkitPro devkita64 for launcher compilation.
 
-# Build the port
-./build.sh
+### Build steps
 
-# Or with custom flags
-./build.sh DCR_GL_MESA=0  # Use null renderer (no mesa32 needed)
+`powershell
+git submodule update --init --recursive
+.\build.ps1
+cd launcher; ./build.sh
 `
 
-Output: ast5.nsp (installable via sphaira)
-
-## Installation on Switch
-1. Create folder: sd:/switch/fast5/
-2. Copy ast5.nsp and your **original APK** to that folder
-3. Open sphaira → Homebrew → Fast Five HD → **Install Forwarder**
-4. Launch from Home Menu
-
-## Project Structure
-`
-FAST5-NX/
-├── source/                 # Port-specific code
-│   ├── lib/               # Game .so files (libFast5.so, libStormGLOFT.so)
-│   ├── imports.c          # JNI/bionic symbol table (generated)
-│   ├── java.c             # JNI method implementations
-│   ├── fast5_boot.c       # Game loading, EGL setup, main loop
-│   ├── fast5_java.c       # JNI hooks for GameRenderer, GLGame, AudioTrack
-│   ├── fast5_input.c      # Touch/controller mapping
-│   ├── fast5_audio.c      # OpenSL ES audio hooks
-│   ├── fast5_setup.c      # Setup plan for launcher
-│   ├── port_config.h      # Port metadata & runtime config
-│   └── config.h           # Build config
-├── runtime/               # android32 runtime (git submodule)
-├── portlibs32/            # libnx32 + mesa32 libs & headers
-├── launcher/              # Forwarder NRO build
-├── Makefile               # Build config
-├── build.sh               # Docker build wrapper
-└── .gitignore
-`
-
-## JNI Methods Implemented
-From libFast5.so analysis (24 methods):
-- **GameRenderer**: 
-ativeResize, 
-ativeInit, 
-ativeDestroy, 
-ativeRender, onKeyboardFinish
-- **GameGLSurfaceView**: 
-ativeResume, 
-ativePause, 
-ativePauseAllSounds
-- **GLMediaPlayer**: 
-ativeSetStopOnMusic, 
-ativeInit, 
-ativeGetTotalSounds*
-- **GLGame**: 
-ativeMPOnlineLoginSet, 
-ativePauseInGame, 
-ativeSetOnKeyUp/Down, 
-ativeAccelerometer, 
-ativeOrientation, 
-ativeInit, 
-ativeTouchPressed/Moved/Released
-- **GLResLoader**: 
-ativeInit
-- **GLUtils.Device**: 
-ativeInit
-
-## Current Status
-✅ **Build successful** - ast5.nsp (3.7 MB)  
-✅ JNI bindings complete (24 methods)  
-✅ EGL/GLES2 window (1024×600 render target)  
-✅ Game loop with 
-ativeRender calls  
-✅ Input hooks (touch → controller mapping)  
-✅ Audio hooks (virtual AudioTrack)  
-✅ igli.bin loading from APK  
-
-## Debugging
-On Switch, logs are written to:
-- sd:/switch/fast5/debug.log - Runtime debug output
-- sd:/switch/fast5/crash.log - Crash reports
+The compiled binary will be located at launcher/fast5_nx.nro.
 
 ## Credits
-- android32 runtime by [aks796](https://github.com/aks796)
-- libnx32 by [aks796](https://github.com/aks796/libnx32)
-- mesa32 by [aks796](https://github.com/aks796/mesa32)
-- vita2hos toolchain by [vita2hos](https://github.com/vita2hos)
 
-## Legal
-**No game files are included.** Players must use their own legally obtained APK. This port only provides the wrapper/runtime to run the game on Switch.
+- [aks796/android32](https://github.com/aks796/android32) — core AArch32 Android runtime.
+- [libnx32](https://github.com/aks796/libnx32) and Mesa Switch contributors — SDK and graphics stack.
+- [tintin_nx](https://github.com/Muhilhammau/tintin_nx) — documentation and structure reference.
+- Gameloft and Universal Pictures — original game developers and rights holders.
 
----
-*Reference structure based on tintin-nx and other android32 ports (Shadow Guardian, etc.)*
+## License
+
+The port code is licensed under MIT (see LICENSE). Game assets and binaries remain the property of their respective owners.
 '@
