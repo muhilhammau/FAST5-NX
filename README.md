@@ -1,4 +1,3 @@
-@'
 <div align="center">
 
 <img src="launcher/icon.jpg" alt="Fast Five HD" width="180">
@@ -24,13 +23,13 @@ An unofficial Nintendo Switch wrapper/port of Gameloft's Android game.
 
 The supported game build is:
 
-`	ext
+```	ext
 Package:      com.gameloft.android.GAND.GloftF5HP.ML
 Version:      1.0.7
 Version code: 107
 ABI:          armeabi-v7a / AArch32
 Engine:       StormGLOFT (custom Gameloft engine)
-`
+```
 
 The original ARM game library runs directly inside a 32-bit Horizon OS process. Players must provide their own APK and game data files (gameloft/games/GloftF5HP/); these are not included in the repository or release download.
 
@@ -71,7 +70,7 @@ The original ARM game library runs directly inside a 32-bit Horizon OS process. 
 
 Copy the switch/ folder to the root of your SD card. Ensure the game files are placed according to the layout below:
 
-`	ext
+```	ext
 sd:/switch/fast5_nx/
 ├── fast5_nx.nro
 ├── Fast-Five-HD.apk
@@ -91,7 +90,7 @@ sd:/switch/fast5_nx/
             ├── oconf.bar
             ├── sound.pack
             └── states
-`
+```
 
 ### First launch
 
@@ -125,32 +124,33 @@ sd:/switch/fast5_nx/
 
 The application directory is located under sd:/switch/fast5_nx/:
 
-`	ext
+```	ext
 data/              Android internal storage and native saves
 gameloft/          Gameloft shared data (gameloft/games/GloftF5HP/)
 sdcard/            Android external storage root
 buttons.txt        Custom button mapping overrides
 debug.log          Current execution log
 crash.log          Crash diagnostics output
-`
+```
 
 ## Building
 
 ### Requirements
 
 - Docker with Linux container support.
-- [android32](https://github.com/aks796/android32) in untime/ (Git submodule).
+- [android32](https://github.com/aks796/android32) in 
+untime/ (Git submodule).
 - [libnx32](https://github.com/aks796/libnx32) prefix (version 4.12.0 or newer).
 - [mesa32](https://github.com/aks796/mesa32) or mesa-switch32 in portlibs32/.
 - devkitPro devkita64 for launcher compilation.
 
 ### Build steps
 
-`powershell
+```powershell
 git submodule update --init --recursive
 .\build.ps1
 cd launcher; ./build.sh
-`
+```
 
 The compiled binary will be located at launcher/fast5_nx.nro.
 
@@ -164,4 +164,4 @@ The compiled binary will be located at launcher/fast5_nx.nro.
 ## License
 
 The port code is licensed under MIT (see LICENSE). Game assets and binaries remain the property of their respective owners.
-'@
+'
