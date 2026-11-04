@@ -2,7 +2,7 @@
 
 <img src="launcher/icon.jpg" alt="Fast Five HD" width="180">
 
-# fast5_nx
+# FAST5-NX
 
 **Fast Five HD on Nintendo Switch**
 
