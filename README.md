@@ -9,7 +9,7 @@
 An unofficial Nintendo Switch wrapper/port of Gameloft's Android game.
 
 [![Switch](https://img.shields.io/badge/Nintendo_Switch-Homebrew-E60012?style=for-the-badge&logo=nintendoswitch&logoColor=white)](#installation)
-[![Version](https://img.shields.io/badge/version-v1.0.7-4C8BF5?style=for-the-badge)](#)
+[![Version](https://img.shields.io/badge/version-v1.0.0-4C8BF5?style=for-the-badge)](#)
 [![Android](https://img.shields.io/badge/Android-1.0.7-3DDC84?style=for-the-badge&logo=android&logoColor=white)](#about)
 [![AArch32](https://img.shields.io/badge/AArch32-32--bit-0091BD?style=for-the-badge&logo=arm&logoColor=white)](#building)
 
@@ -19,7 +19,7 @@ An unofficial Nintendo Switch wrapper/port of Gameloft's Android game.
 
 ## About
 
-ast5_nx runs the original 32-bit Android version of **Fast Five HD** on Nintendo Switch, using the open-source [android32](https://github.com/aks796/android32) runtime.
+Fast5_nx runs the original 32-bit Android version of **Fast Five HD** on Nintendo Switch, using the open-source [android32](https://github.com/aks796/android32) runtime.
 
 The supported game build is:
 
