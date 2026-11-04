@@ -1,4 +1,3 @@
-@'
 # Fast Five HD - Nintendo Switch Port (32-bit/armeabi-v7a)
 
 This is a port of **Fast Five HD** (Gameloft) for Nintendo Switch using the [android32](https://github.com/aks796/android32) runtime. The game uses a custom **StormGLOFT** engine.
@@ -21,18 +20,19 @@ This is a port of **Fast Five HD** (Gameloft) for Nintendo Switch using the [and
 ### Prerequisites
 1. **Docker** installed and running
 2. **libnx32** built from source:
-   `ash
+   ```ash
    git clone https://github.com/aks796/libnx32 ../libnx32
    cd ../libnx32 && ./build.sh
-   `
+   ```
 3. **mesa32** (OpenGL ES/EGL) - download release and extract to portlibs32/
-4. **android32 runtime** - cloned as untime/ submodule:
-   `ash
+4. **android32 runtime** - cloned as 
+untime/ submodule:
+   ```ash
    git submodule add https://github.com/aks796/android32 runtime
-   `
+   ```
 
 ### Build Steps
-`ash
+```ash
 # Pull the toolchain image
 docker pull ghcr.io/vita2hos/devcontainer/vita2hos:latest
 
@@ -41,7 +41,7 @@ docker pull ghcr.io/vita2hos/devcontainer/vita2hos:latest
 
 # Or with custom flags
 ./build.sh DCR_GL_MESA=0  # Use null renderer (no mesa32 needed)
-`
+```
 
 Output: ast5.nsp (installable via sphaira)
 
@@ -52,7 +52,7 @@ Output: ast5.nsp (installable via sphaira)
 4. Launch from Home Menu
 
 ## Project Structure
-`
+```
 FAST5-NX/
 ├── source/                 # Port-specific code
 │   ├── lib/               # Game .so files (libFast5.so, libStormGLOFT.so)
@@ -71,7 +71,7 @@ FAST5-NX/
 ├── Makefile               # Build config
 ├── build.sh               # Docker build wrapper
 └── .gitignore
-`
+```
 
 ## JNI Methods Implemented
 From libFast5.so analysis (24 methods):
